@@ -1,14 +1,12 @@
 class StudentsController < ApplicationController
   def index
     @students = Student.all.order({ :created_at => :desc })
-
     render({ :template => "students/index" })
   end
 
   def show
     the_id = params.fetch("path_id")
     @student = Student.where({:id => the_id }).at(0)
-
     render({ :template => "students/show" })
   end
 
@@ -22,7 +20,7 @@ class StudentsController < ApplicationController
       @student.save
       redirect_to("/students", { :notice => "Student created successfully." })
     else
-      redirect_to("/students", { :notice => "Student failed to create successfully." })
+      redirect_to("/students", { :alert => "Student failed to create successfully." })
     end
   end
 
@@ -30,15 +28,19 @@ class StudentsController < ApplicationController
     the_id = params.fetch("path_id")
     @student = Student.where({ :id => the_id }).at(0)
 
-    @student.first_name = params.fetch("query_first_name")
-    @student.last_name = params.fetch("query_last_name")
-    @student.email = params.fetch("query_email")
+    if @student.present?
+      @student.first_name = params.fetch("query_first_name")
+      @student.last_name = params.fetch("query_last_name")
+      @student.email = params.fetch("query_email")
 
-    if @student.valid?
-      @student.save
-      redirect_to("/students/#{@student.id}", { :notice => "Student updated successfully."} )
+      if @student.valid?
+        @student.save
+        redirect_to("/students/#{@student.id}", { :notice => "Student updated successfully." })
+      else
+        redirect_to("/students/#{@student.id}", { :alert => "Student failed to update successfully." })
+      end
     else
-      redirect_to("/students/#{@student.id}", { :alert => "Student failed to update successfully." })
+      redirect_to("/students", { :alert => "Student not found." })
     end
   end
 
@@ -46,8 +48,11 @@ class StudentsController < ApplicationController
     the_id = params.fetch("path_id")
     @student = Student.where({ :id => the_id }).at(0)
 
-    @student.destroy
-
-    redirect_to("/students", { :notice => "Student deleted successfully."} )
+    if @student.present?
+      @student.destroy
+      redirect_to("/students", { :notice => "Student deleted successfully." })
+    else
+      redirect_to("/students", { :alert => "Student not found." })
+    end
   end
 end

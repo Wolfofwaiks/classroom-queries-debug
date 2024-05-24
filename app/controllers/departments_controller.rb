@@ -1,14 +1,12 @@
 class DepartmentsController < ApplicationController
   def index
     @departments = Department.all.order({ :created_at => :desc })
-
     render({ :template => "departments/index" })
   end
 
   def show
     the_id = params.fetch("path_id")
-    @department = Department.where({:id => the_id })
-
+    @department = Department.where({:id => the_id }).at(0)
     render({ :template => "departments/show" })
   end
 
@@ -20,7 +18,7 @@ class DepartmentsController < ApplicationController
       @department.save
       redirect_to("/departments", { :notice => "Department created successfully." })
     else
-      redirect_to("/departments", { :notice => "Department failed to create successfully." })
+      redirect_to("/departments", { :alert => "Department failed to create successfully." })
     end
   end
 
@@ -28,13 +26,17 @@ class DepartmentsController < ApplicationController
     the_id = params.fetch("path_id")
     @department = Department.where({ :id => the_id }).at(0)
 
-    @department.name = params.fetch("query_name")
+    if @department.present?
+      @department.name = params.fetch("query_name")
 
-    if @department.valid?
-      @department.save
-      redirect_to("/departments/#{@department.id}", { :notice => "Department updated successfully."} )
+      if @department.valid?
+        @department.save
+        redirect_to("/departments/#{@department.id}", { :notice => "Department updated successfully." })
+      else
+        redirect_to("/departments/#{@department.id}", { :alert => "Department failed to update successfully." })
+      end
     else
-      redirect_to("/departments/#{@department.id}", { :alert => "Department failed to update successfully." })
+      redirect_to("/departments", { :alert => "Department not found." })
     end
   end
 
@@ -42,8 +44,11 @@ class DepartmentsController < ApplicationController
     the_id = params.fetch("path_id")
     @department = Department.where({ :id => the_id }).at(0)
 
-    @department.destroy
-
-    redirect_to("/departments", { :notice => "Department deleted successfully."} )
+    if @department.present?
+      @department.destroy
+      redirect_to("/departments", { :notice => "Department deleted successfully." })
+    else
+      redirect_to("/departments", { :alert => "Department not found." })
+    end
   end
 end
